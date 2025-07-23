@@ -7,7 +7,10 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: ['https://iframe-frontend.vercel.app'] // ✅ your deployed frontend
+  origin: [
+    'http://localhost:5173',
+    'https://iframe-frontend.vercel.app'
+  ]
 }));
 
 mongoose.connect(process.env.MONGO_URI)
