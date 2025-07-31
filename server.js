@@ -6,43 +6,53 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://iframe-frontend.vercel.app'
-  ]
-}));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://iframe-frontend.vercel.app',
+    ],
+  })
+);
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 
+// ✅ Schema includes place & room
 const iframeSchema = new mongoose.Schema({
-  url: String,
-  uniqueId: String
+  url: { type: String, required: true },
+  uniqueId: { type: String, required: true },
+  place: { type: String },
+  room: { type: String },
 });
 
 const Iframe = mongoose.model('Iframe', iframeSchema);
 
+// ✅ Create new iframe
 app.post('/api/iframe', async (req, res) => {
-  const { url } = req.body;
+  const { url, place, room } = req.body;
+
   if (!url) return res.status(400).json({ message: 'URL required' });
 
   const uniqueId = uniqid();
-  const newIframe = new Iframe({ url, uniqueId });
+  const newIframe = new Iframe({ url, uniqueId, place, room });
   await newIframe.save();
 
   res.json({
     message: '✅ URL saved',
-    viewUrl: `https://iframe-frontend.vercel.app/view/${uniqueId}`
+    viewUrl: `https://iframe-frontend.vercel.app/view/${uniqueId}`,
   });
 });
 
+// ✅ Get all iframes
 app.get('/api/iframes', async (req, res) => {
   const iframes = await Iframe.find();
   res.json(iframes);
 });
 
+// ✅ Get one iframe by ID
 app.get('/api/iframe/:uniqueId', async (req, res) => {
   const iframe = await Iframe.findOne({ uniqueId: req.params.uniqueId });
   if (!iframe) return res.status(404).json({ message: 'Not found' });
